@@ -1,0 +1,53 @@
+add_action( &#39;gform_after_submission&#39;, function ( $entry, $form ) {
+// Log that the hook was triggered
+error_log( &#39;gform_after_submission triggered&#39; );
+// Extract form field values from the entry
+$name = rgar( $entry, &#39;1&#39; ); // Replace &#39;1&#39; with your field ID for &#39;name&#39;
+$email = rgar( $entry, &#39;4&#39; ); // Replace &#39;4&#39; with your field ID for &#39;email&#39;
+$subject = rgar( $entry, &#39;7&#39; ); // Replace &#39;7&#39; with your field ID for &#39;subject&#39;
+$body = rgar( $entry, &#39;8&#39; ); // Replace &#39;8&#39; with your field ID for &#39;body&#39;
+$custom_field_value = rgar( $entry, &#39;5&#39; ); // Replace &#39;5&#39; with your custom field ID
+// Log extracted values for debugging
+error_log( &#39;Name: &#39; . $name );
+
+error_log( &#39;Email: &#39; . $email );
+error_log( &#39;Subject: &#39; . $subject );
+error_log( &#39;Body: &#39; . $body );
+error_log( &#39;Custom Field Value: &#39; . $custom_field_value );
+// Construct the custom JSON structure for Zendesk
+$zendesk_request = [
+&quot;request&quot; =&gt; [
+&quot;requester&quot; =&gt; [
+&quot;name&quot; =&gt; $name,
+&quot;email&quot; =&gt; $email,
+],
+&quot;subject&quot; =&gt; $subject,
+&quot;comment&quot; =&gt; [
+&quot;body&quot; =&gt; $body,
+],
+&quot;custom_fields&quot; =&gt; [
+[
+&quot;id&quot; =&gt; 27917443967127, // Replace with the actual custom field ID
+&quot;value&quot; =&gt; $custom_field_value,
+],
+],
+],
+];
+// Log the JSON payload for debugging
+error_log( &#39;Zendesk Payload: &#39; . json_encode( $zendesk_request ) );
+// Send a manual request to Zendesk for debugging
+$response = wp_remote_post( &#39;https://your-zendesk-endpoint.com/api/v2/tickets&#39;, [
+&#39;headers&#39; =&gt; [
+&#39;Authorization&#39; =&gt; &#39;Bearer your_api_token&#39;, // Replace with your actual API token
+&#39;Content-Type&#39; =&gt; &#39;application/json&#39;,
+],
+&#39;body&#39; =&gt; json_encode( $zendesk_request ),
+] );
+// Log the response for debugging
+if ( is_wp_error( $response ) ) {
+error_log( &#39;Zendesk API Error: &#39; . $response-&gt;get_error_message() );
+} else {
+error_log( &#39;Zendesk API Response: &#39; . print_r( $response, true ) );
+}
+
+}, 10, 2 );
