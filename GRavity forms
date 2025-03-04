@@ -1,0 +1,22 @@
+function delete_uploaded_files_on_entry_delete($entry_id) {
+    GFCommon::log_debug(__METHOD__ . '(): Running for entry ID ' . $entry_id);
+    $entry = GFAPI::get_entry($entry_id);
+    $form = GFAPI::get_form($entry['form_id']);
+    
+    foreach ($form['fields'] as $field) {
+        if ($field->type == 'file' && isset($entry[$field->id])) {
+            $file_data = $entry[$field->id];
+            if (is_array($file_data)) {
+                foreach ($file_data as $file_path) {
+                    if (file_exists($file_path)) {
+                        wp_delete_file($file_path);
+                    }
+                }
+            } else {
+                if (file_exists($file_data)) {
+                    wp_delete_file($file_data);
+                }
+            }
+        }
+    }
+}
